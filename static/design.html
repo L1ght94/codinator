@@ -94,6 +94,76 @@ assert is_even(3) == False</code></pre>
     <!-- Include Highlight.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'http://0.0.0.0:8000/snippets/';
+
+            function fetchSnippets() {
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(snippets => {
+                        const snippetsList = document.getElementById('snippets-list');
+                        snippetsList.innerHTML = '';  // Clear list
+                        snippets.forEach(snippet => {
+                            const snippetElement = document.createElement('li');
+                            snippetElement.innerHTML = `
+                                <a href="#" onclick="loadSnippet(${snippet.id})">${snippet.description} | ${snippet.language}</a>
+                                <button onclick="deleteSnippet(${snippet.id})">Delete</button>
+                            `;
+                            snippetsList.appendChild(snippetElement);
+                        });
+                    });
+            }
+
+            window.loadSnippet = function(id) {
+                console.log('AAAA')
+                fetch(`${apiUrl}${id}`)
+                    .then(response => response.json())
+                    .then(snippet => {
+                        document.getElementById('code-editor').value = snippet.code;
+                        document.getElementById('code-editor').dataset.snippetId = snippet.id;  // Store ID for updating
+                    });
+            }
+
+            window.createSnippet = function() {
+                const description = document.getElementById('new-snippet-desc').value;
+                const language = document.getElementById('new-snippet-lang').value;
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ language, description })
+                }).then(() => fetchSnippets());  // Refresh list after creation
+            }
+
+            window.updateSnippet = function() {
+                const id = document.getElementById('code-editor').dataset.snippetId;
+                const code = document.getElementById('code-editor').value;
+                fetch(`${apiUrl}${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                }).then(() => {
+                    document.getElementById('success-message').style.display = 'block'; // Show success message
+                    setTimeout(() => {
+                        document.getElementById('success-message').style.display = 'none'; // Hide after 3 seconds
+                    }, 3000);
+                    fetchSnippets();  // Refresh list after update
+                });
+            }
+
+            window.deleteSnippet = function(id) {
+                fetch(`${apiUrl}${id}`, { method: 'DELETE' })
+                    .then(() => fetchSnippets());  // Refresh list after deletion
+            }
+
+            fetchSnippets(); // Initial fetch of snippets
+        });
+    </script> -->
 </body>
 
 </html>
