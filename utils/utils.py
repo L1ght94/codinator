@@ -27,6 +27,6 @@ def sanitize_input(input_string: str) -> str:
 
 def extract_code_snippet(output_str: str) -> str:
     try:
-        return output_str.split('```')[1]
+        return f"```{output_str.split('```')[1]}```"
     except:
         raise Exception("Could not get code snippet")
