@@ -9,4 +9,4 @@ if [ ! -f .env ]; then
     exit 1
 fi
 docker build -t $IMAGE_NAME .
-docker run --rm -p 8000:8000 --env-file .env $IMAGE_NAME
+docker run -v ./snippets:/app/snippets --rm -p 8000:8000 --env-file .env $IMAGE_NAME

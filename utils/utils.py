@@ -2,6 +2,7 @@ import os
 import pickle
 
 path_to_pickle = os.environ['SNIPPETS_FILE']
+os.makedirs(os.path.exists(os.path.dirname(path_to_pickle)), exist_ok=True)
 
 def get_headers():
     headers = {
@@ -26,6 +27,6 @@ def sanitize_input(input_string: str) -> str:
 
 def extract_code_snippet(output_str: str) -> str:
     try:
-        return output_str.split('```')[1:3]
+        return output_str.split('```')[1]
     except:
         raise Exception("Could not get code snippet")
