@@ -33,6 +33,7 @@ async def read_root():
 
 
 snippets = utils.load_pkl()
+languages = ['Python', 'Javascript', 'Ruby', 'C', 'Java']
 
 
 def get_openai_api_key():
@@ -45,7 +46,7 @@ def get_openai_model():
 
 @app.get("/languages/")
 async def get_list_of_languages():
-    return ['Python', 'Javascript', 'Ruby']
+    return languages
 
 
 @app.post("/snippets/", response_model=Snippet)
