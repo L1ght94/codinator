@@ -34,7 +34,7 @@ async def read_root():
 
 snippets = utils.load_pkl()
 languages = ['Python', 'Javascript', 'Ruby', 'C', 'Java']
-max_tokens = os.environ['MAX_TOKENS']
+max_tokens = int(os.environ['MAX_TOKENS'])
 
 
 def get_openai_api_key():
@@ -102,7 +102,7 @@ async def delete_snippet(snippet_id: int):
 
 
 @app.put("/snippets/{snippet_id}/improve_code", response_model=Snippet)
-async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
+async def improve_code(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
             break
@@ -121,7 +121,8 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.code = utils.extract_code_snippet(code)
-        snippet.previous_messages.extend([messages, snippet.code])
+        snippet.previous_messages.extend([new_message, snippet.code])
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -165,7 +166,7 @@ def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_k
 
 
 @app.put("/snippets/{snippet_id}/improve_test_cases", response_model=Snippet)
-async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
+async def improve_test_cases(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
             break
@@ -184,7 +185,7 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.test_cases = utils.extract_code_snippet(code)
-        snippet.test_case_history.extend([messages, snippet.test_cases])
+        snippet.test_case_history.extend([new_message, snippet.test_cases])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
