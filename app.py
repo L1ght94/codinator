@@ -52,6 +52,7 @@ async def get_list_of_languages():
 
 @app.post("/snippets/", response_model=Snippet)
 async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api_key), model=Depends(get_openai_model)):
+    global snippets
     ids = [s.id for s in snippets]
     if ids:
         snippet.id = max(ids) + 1
@@ -67,7 +68,7 @@ async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api
         openai_response = client.chat.completions.create(
             model=model,
             messages=[message],
-            max_tokens=max_tokens/10
+            max_tokens=max_tokens
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.code = utils.extract_code_snippet(code)
@@ -103,6 +104,7 @@ async def delete_snippet(snippet_id: int):
 
 @app.put("/snippets/{snippet_id}/improve_code", response_model=Snippet)
 async def improve_code(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
+    global snippets
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
             break
@@ -114,14 +116,21 @@ async def improve_code(snippet_id: int, feedback: Feedback, api_key: str = Depen
             "content": f"### {feedback.message}\n###"
         }
         messages = snippet.previous_messages + [new_message]
+        print(f"{snippet.previous_messages=}")
+        print()
+        print(f"{messages=}")
         openai_response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=max_tokens/10
+            max_tokens=max_tokens
         )
         code = openai_response.choices[0].message.content.strip()
+        print()
+        print(f"{code=}")
+
         snippet.code = utils.extract_code_snippet(code)
-        snippet.previous_messages.extend([new_message, snippet.code])
+        assistant_response = {"role": "assistant", "content": snippet.code}
+        snippet.previous_messages.extend([new_message, assistant_response])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -133,28 +142,29 @@ async def improve_code(snippet_id: int, feedback: Feedback, api_key: str = Depen
 
 @app.post("/snippets/{snippet_id}/test_cases", response_model=Snippet)
 def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_key), model=Depends(get_openai_model)):
+    global snippets
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
             break
 
     try:
-        message = {
+        new_message = {
             "role": "user",
             "content": f"### Generate test cases\n###"
         }
-        messages = [{"role": "assistant", "content": snippet.code}, message]
+        messages = [{"role": "assistant", "content": snippet.code}, new_message]
 
         openai_response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=max_tokens/10
+            max_tokens=max_tokens
         )
 
         test_case = openai_response.choices[0].message.content.strip()
         snippet.test_cases = utils.extract_code_snippet(test_case)
         assistant_response = {"role": "assistant", "content": snippet.test_cases}
 
-        snippet.test_case_history.extend([messages, assistant_response])
+        snippet.test_case_history.extend([new_message, assistant_response])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -167,6 +177,7 @@ def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_k
 
 @app.put("/snippets/{snippet_id}/improve_test_cases", response_model=Snippet)
 async def improve_test_cases(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
+    global snippets
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
             break
@@ -181,11 +192,13 @@ async def improve_test_cases(snippet_id: int, feedback: Feedback, api_key: str =
         openai_response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=max_tokens/10
+            max_tokens=max_tokens
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.test_cases = utils.extract_code_snippet(code)
-        snippet.test_case_history.extend([new_message, snippet.test_cases])
+
+        assistant_response = {"role": "assistant", "content": snippet.test_cases}
+        snippet.test_case_history.extend([new_message, assistant_response])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
