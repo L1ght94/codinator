@@ -10,5 +10,4 @@ class Snippet(BaseModel):
     previous_messages: Optional[List[dict]] = []
 
 class Feedback(BaseModel):
-    snippet_id: int
     message: str
