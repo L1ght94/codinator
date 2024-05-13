@@ -34,11 +34,19 @@ async def read_root():
 
 snippets = utils.load_pkl()
 
+
 def get_openai_api_key():
     return os.getenv("OPENAI_API_KEY")
 
+
 def get_openai_model():
     return os.getenv("OPENAI_MODEL")
+
+
+@app.get("/languages/")
+async def get_list_of_languages():
+    return ['Python', 'Javascript', 'Ruby']
+
 
 @app.post("/snippets/", response_model=Snippet)
 async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api_key), model=Depends(get_openai_model)):
@@ -72,13 +80,16 @@ async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api
     utils.update_pkl(snippets)
     return snippet
 
+
 @app.get("/snippets/", response_model=List[Snippet])
 async def list_snippets():
     return snippets
 
+
 @app.get("/snippets/{snippet_id}", response_model=List[Snippet])
 async def list_snippets(snippet_id: int):
     return [snippet for snippet in snippets if snippet.id == snippet_id]
+
 
 @app.delete("/snippets/{snippet_id}")
 async def delete_snippet(snippet_id: int):
@@ -86,6 +97,7 @@ async def delete_snippet(snippet_id: int):
     snippets = [snippet for snippet in snippets if snippet.id != snippet_id]
     utils.update_pkl(snippets)
     return {"message": "Snippet deleted successfully"}
+
 
 @app.post("/snippets/{snippet_id}/feedback", response_model=Feedback)
 async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
@@ -113,6 +125,7 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
 
     return snippet
 
+
 @app.put("/snippets/{snippet_id}", response_model=Snippet)
 async def update_snippet(snippet_id: int, snippet: Snippet):
     """
@@ -124,6 +137,7 @@ async def update_snippet(snippet_id: int, snippet: Snippet):
             snippets[i] = snippet
             return snippet
     raise HTTPException(status_code=404, detail="Snippet not found")
+
 
 if __name__ == "__main__":
     import uvicorn
