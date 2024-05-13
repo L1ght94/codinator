@@ -21,5 +21,11 @@ def update_pkl(snippets):
     with open(path_to_pickle, 'wb') as pklfile:
         pickle.dump(snippets, pklfile)
 
-def sanitize_input(input_string):
+def sanitize_input(input_string: str) -> str:
     return input_string.replace(";", ".").replace("&", "and")
+
+def extract_code_snippet(output_str: str) -> str:
+    try:
+        return output_str.split('```')[1:3]
+    except:
+        raise Exception("Could not get code snippet")
