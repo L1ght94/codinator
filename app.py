@@ -100,7 +100,7 @@ async def delete_snippet(snippet_id: int):
     return {"message": "Snippet deleted successfully"}
 
 
-@app.post("/snippets/{snippet_id}/feedback", response_model=Snippet)
+@app.put("/snippets/{snippet_id}/feedback", response_model=Snippet)
 async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
