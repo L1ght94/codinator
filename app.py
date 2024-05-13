@@ -100,7 +100,7 @@ async def delete_snippet(snippet_id: int):
     return {"message": "Snippet deleted successfully"}
 
 
-@app.post("/snippets/{snippet_id}/feedback", response_model=Feedback)
+@app.post("/snippets/{snippet_id}/feedback", response_model=Snippet)
 async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
@@ -124,20 +124,9 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    snippets[i] = snippet
+    utils.update_pkl(snippets)
     return snippet
-
-
-@app.put("/snippets/{snippet_id}", response_model=Snippet)
-async def update_snippet(snippet_id: int, snippet: Snippet):
-    """
-        Updates the snippet after with code generated after getting feedback
-        from user
-    """
-    for i, s in enumerate(snippets):
-        if s.id == snippet_id:
-            snippets[i] = snippet
-            return snippet
-    raise HTTPException(status_code=404, detail="Snippet not found")
 
 
 if __name__ == "__main__":
