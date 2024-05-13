@@ -34,6 +34,7 @@ async def read_root():
 
 snippets = utils.load_pkl()
 languages = ['Python', 'Javascript', 'Ruby', 'C', 'Java']
+max_tokens = os.environ['MAX_TOKENS']
 
 
 def get_openai_api_key():
@@ -66,7 +67,7 @@ async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api
         openai_response = client.chat.completions.create(
             model=model,
             messages=[message],
-            max_tokens=1000
+            max_tokens=max_tokens/10
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.code = utils.extract_code_snippet(code)
@@ -116,7 +117,7 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
         openai_response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=150
+            max_tokens=max_tokens/10
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.code = utils.extract_code_snippet(code)
@@ -145,7 +146,7 @@ def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_k
         openai_response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=500
+            max_tokens=max_tokens/10
         )
 
         test_case = openai_response.choices[0].message.content.strip()
@@ -160,6 +161,36 @@ def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_k
     snippets[i] = snippet
     utils.update_pkl(snippets)
 
+    return snippet
+
+
+@app.put("/snippets/{snippet_id}/improve_test_cases", response_model=Snippet)
+async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
+    for i, snippet in enumerate(snippets):
+        if snippet.id == snippet_id:
+            break
+
+    feedback.message = utils.sanitize_input(feedback.message)
+    try:
+        new_message = {
+            "role": "user",
+            "content": f"### {feedback.message}\n###"
+        }
+        messages = snippet.test_case_history + [new_message]
+        openai_response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens/10
+        )
+        code = openai_response.choices[0].message.content.strip()
+        snippet.test_cases = utils.extract_code_snippet(code)
+        snippet.test_case_history.extend([messages, snippet.test_cases])
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    snippets[i] = snippet
+    utils.update_pkl(snippets)
     return snippet
 
 
