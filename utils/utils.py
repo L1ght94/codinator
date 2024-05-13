@@ -2,7 +2,7 @@ import os
 import pickle
 
 path_to_pickle = os.environ['SNIPPETS_FILE']
-os.makedirs(os.path.exists(os.path.dirname(path_to_pickle)), exist_ok=True)
+os.makedirs(os.path.dirname(path_to_pickle), exist_ok=True)
 
 def get_headers():
     headers = {
