@@ -66,7 +66,7 @@ async def create_snippet(snippet: Snippet, api_key: str = Depends(get_openai_api
         openai_response = client.chat.completions.create(
             model=model,
             messages=[message],
-            max_tokens=150
+            max_tokens=1000
         )
         code = openai_response.choices[0].message.content.strip()
         snippet.code = utils.extract_code_snippet(code)
@@ -100,7 +100,7 @@ async def delete_snippet(snippet_id: int):
     return {"message": "Snippet deleted successfully"}
 
 
-@app.put("/snippets/{snippet_id}/feedback", response_model=Snippet)
+@app.put("/snippets/{snippet_id}/improve_code", response_model=Snippet)
 async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Depends(get_openai_api_key), model: str = Depends(get_openai_model)):
     for i, snippet in enumerate(snippets):
         if snippet.id == snippet_id:
@@ -126,6 +126,40 @@ async def modify_snippet(snippet_id: int, feedback: Feedback, api_key: str = Dep
 
     snippets[i] = snippet
     utils.update_pkl(snippets)
+    return snippet
+
+
+@app.post("/snippets/{snippet_id}/test_cases", response_model=Snippet)
+def generate_test_cases(snippet_id: int, api_key: str = Depends(get_openai_api_key), model=Depends(get_openai_model)):
+    for i, snippet in enumerate(snippets):
+        if snippet.id == snippet_id:
+            break
+
+    try:
+        message = {
+            "role": "user",
+            "content": f"### Generate test cases\n###"
+        }
+        messages = [{"role": "assistant", "content": snippet.code}, message]
+
+        openai_response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=500
+        )
+
+        test_case = openai_response.choices[0].message.content.strip()
+        snippet.test_cases = utils.extract_code_snippet(test_case)
+        assistant_response = {"role": "assistant", "content": snippet.test_cases}
+
+        snippet.test_case_history.extend([messages, assistant_response])
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    snippets[i] = snippet
+    utils.update_pkl(snippets)
+
     return snippet
 
 
