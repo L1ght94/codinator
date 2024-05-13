@@ -2,6 +2,8 @@
 # and test your application.
 # please do not modify this file or any relevant files
 # unless you know what you are doing.
+IMAGE_NAME=autify-test
+
 if [ ! -f .env ]; then
     echo "Please create a .env file, see .env.example for reference"
     exit 1
