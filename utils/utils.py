@@ -22,4 +22,4 @@ def update_pkl(snippets):
         pickle.dump(snippets, pklfile)
 
 def sanitize_input(input_string):
-    return input_string.replace(";", "").replace("&", "")
+    return input_string.replace(";", ".").replace("&", "and")
