@@ -6,164 +6,285 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
-    <title>
-        Code Snippet Generator
-    </title>
+    <title>Code Snippet Generator</title>
+    <style>
+        .selected-snippet {
+            background-color: #6d7075; /* This is Tailwind's bg-gray-400 color */
+        }
+    </style>
 </head>
 
 <body>
     <div class="flex">
         <!-- Left Column for Snippets List -->
         <div class="w-1/4 p-4 bg-gray-200">
-            <h2 class="font-bold mb-4">
-                Snippets List
-            </h2>
-            <button class="mb-4 bg-blue-500 text-white px-4 py-2 rounded">
-                Create New Snippet
-            </button>
-            <ul>
-                <li class="flex justify-between mb-4">
-                    <!-- Dark & no delete button because it is selected -->
-                    <a class="w-full block p-2 bg-gray-500 rounded text-white" href="#">
-                        Even Tester | Python
-                    </a>
-                </li>
-                <li class="flex justify-between mb-4">
-                    <a class="w-full block p-2 bg-gray-300 rounded" href="#">
-                        Prime number generator | Javascript
-                    </a>
-                    <!-- Delete icon -->
-                    <button class="bg-red-500 text-white px-2 py-1 rounded">
-                        Delete
-                    </button>
-                </li>
+            <h2 class="font-bold mb-4">Snippets List</h2>
+            <button class="mb-4 bg-blue-500 text-white px-4 py-2 rounded create-snippet-button">Create New Snippet</button>
+            <ul id="snippets-list">
+                <!-- Snippets will be dynamically loaded here -->
             </ul>
         </div>
 
         <!-- Right Column for Editor and Controls -->
-        <div class="w-1/2 p-4">
-            <h1 class="text-xl font-bold mb-4">
-                Code Snippet Generator
-            </h1>
-            <textarea placeholder="Describe your code snippet here..."
-                class="w-full p-2 border border-gray-300 rounded mb-4" rows="3"></textarea>
-            <button class="w-full bg-green-500 text-white px-4 py-2 rounded mb-4">
-                Generate Code
-            </button>
+        <div class="w-3/4 p-4">
+            <h1 class="text-xl font-bold mb-4">Code Snippet Generator</h1>
 
-            <!-- Simple Code Highlighter Placeholder for Python -->
-            <pre class="mb-2"><code class="python">def is_even(n):
-    return n % 2</code></pre>
-            <div class="flex justify-between mb-4">
-                <input type="text" placeholder="Provide feedback for regenerating code..."
-                    class="flex-grow mr-2 p-2 border border-gray-300 rounded">
-                <button class="bg-blue-500 text-white px-4 py-2 rounded">
-                    Improve Code
-                </button>
+            <div class="mb-4">
+                <label for="languageSelect" class="block text-sm font-medium text-gray-700">Select Language</label>
+                <select id="languageSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="python">Python</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="ruby">Ruby</option>
+                </select>
             </div>
-            <button class="w-full bg-purple-500 text-white px-4 py-2 rounded mb-4">
-                Generate Test Cases
-            </button>
+            <textarea placeholder="Describe your code snippet here..." class="w-full p-2 border border-gray-300 rounded mb-4 code-description" rows="3"></textarea>
+            <button class="w-full bg-green-500 text-white px-4 py-2 rounded mb-4 generate-code-button">Generate Code</button>
 
-            <!-- Fancy HR -->
+            <pre class="mb-2"><code class="pg-language" id="code-display"></code></pre>
+            <div class="flex justify-between mb-4">
+                <input type="text" placeholder="Provide feedback for regenerating code..." class="flex-grow mr-2 p-2 border border-gray-300 rounded feedback-text">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded improve-code-button">Improve Code</button>
+            </div>
+            <button class="w-full bg-purple-500 text-white px-4 py-2 rounded mb-4 generate-tests-button">Generate Test Cases</button>
+
             <hr class="mb-4 border-t-2 border-gray-300">
 
-            <!-- Simple Code Highlighter Placeholder for Test Cases -->
-            <pre class="mb-2"><code class="python">assert is_even(8) == True
-assert is_even(3) == False</code></pre>
+            <pre class="mb-2"><code class="test-cases-display"></code></pre>
 
             <div class="flex justify-between mb-4">
-                <input type="text" placeholder="Provide feedback for regenerating test cases..."
-                    class="flex-grow mr-2 p-2 border border-gray-300 rounded">
-                <button class="bg-blue-500 text-white px-4 py-2 rounded">
-                    Improve Tests
-                </button>
+                <input type="text" placeholder="Provide feedback for regenerating test cases..." class="flex-grow mr-2 p-2 border border-gray-300 rounded feedback-tests-text">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded improve-tests-button">Improve Tests</button>
             </div>
-            <button class="w-full bg-teal-500 text-white px-4 py-2 rounded mb-4">
-                Run Test Code
-            </button>
-            <div class="bg-green-300 p-4 rounded mb-4">
-                Code Executed Successfully
-            </div>
-            <button class="w-full bg-gray-500 text-white px-4 py-2 rounded mb-4" disabled>
-                Regenerate (Enabled when failed; Send failed feedback to Regenerate)
-            </button>
+            <button class="w-full bg-teal-500 text-white px-4 py-2 rounded mb-4 run-tests-button">Run Test Code</button>
+            <div class="test-results-display bg-green-300 p-4 rounded mb-4"></div>
+            <button class="w-full bg-gray-500 text-white px-4 py-2 rounded mb-4 regenerate-button" disabled>Regenerate</button>
         </div>
     </div>
 
-    <!-- Include Highlight.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
+    <script>
+        const apiUrl = 'http://0.0.0.0:8000';
+        let selectedSnippetId = null;
+        let selectedSnippetLanguage = null;
+        let snippetIds = [];
 
-    <!-- <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const apiUrl = 'http://0.0.0.0:8000/snippets/';
+            loadSnippets();
 
-            function fetchSnippets() {
-                fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(snippets => {
-                        const snippetsList = document.getElementById('snippets-list');
-                        snippetsList.innerHTML = '';  // Clear list
-                        snippets.forEach(snippet => {
-                            const snippetElement = document.createElement('li');
-                            snippetElement.innerHTML = `
-                                <a href="#" onclick="loadSnippet(${snippet.id})">${snippet.description} | ${snippet.language}</a>
-                                <button onclick="deleteSnippet(${snippet.id})">Delete</button>
-                            `;
-                            snippetsList.appendChild(snippetElement);
-                        });
-                    });
-            }
-
-            window.loadSnippet = function(id) {
-                console.log('AAAA')
-                fetch(`${apiUrl}${id}`)
-                    .then(response => response.json())
-                    .then(snippet => {
-                        document.getElementById('code-editor').value = snippet.code;
-                        document.getElementById('code-editor').dataset.snippetId = snippet.id;  // Store ID for updating
-                    });
-            }
-
-            window.createSnippet = function() {
-                const description = document.getElementById('new-snippet-desc').value;
-                const language = document.getElementById('new-snippet-lang').value;
-                fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ language, description })
-                }).then(() => fetchSnippets());  // Refresh list after creation
-            }
-
-            window.updateSnippet = function() {
-                const id = document.getElementById('code-editor').dataset.snippetId;
-                const code = document.getElementById('code-editor').value;
-                fetch(`${apiUrl}${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ code })
-                }).then(() => {
-                    document.getElementById('success-message').style.display = 'block'; // Show success message
-                    setTimeout(() => {
-                        document.getElementById('success-message').style.display = 'none'; // Hide after 3 seconds
-                    }, 3000);
-                    fetchSnippets();  // Refresh list after update
-                });
-            }
-
-            window.deleteSnippet = function(id) {
-                fetch(`${apiUrl}${id}`, { method: 'DELETE' })
-                    .then(() => fetchSnippets());  // Refresh list after deletion
-            }
-
-            fetchSnippets(); // Initial fetch of snippets
+            document.querySelector('.create-snippet-button').addEventListener('click', createSnippet);
+            document.querySelector('.generate-code-button').addEventListener('click', generateCode);
+            document.querySelector('.improve-code-button').addEventListener('click', improveCode);
+            document.querySelector('.generate-tests-button').addEventListener('click', generateTests);
+            document.querySelector('.improve-tests-button').addEventListener('click', improveTests);
+            document.querySelector('.run-tests-button').addEventListener('click', runTests);
         });
-    </script> -->
+
+        function loadSnippets() {
+            fetch(`${apiUrl}/snippets`)
+                .then(response => response.json())
+                .then(data => {
+                    const snippetsList = document.getElementById('snippets-list');
+                    snippetsList.innerHTML = '';
+                    snippetIds = [];
+
+                    if (data && data.length > 0) {
+                        data.forEach(snippet => {
+                            snippetIds.push(snippet.id);
+                            const snippetItem = document.createElement('li');
+                            snippetItem.classList.add('flex', 'justify-between', 'mb-4');
+                            snippetItem.innerHTML = `
+                                <a id="snippet-${snippet.id}" class="w-full block p-2 bg-gray-300 rounded snippet-link" href="#" onclick="loadSnippet(${snippet.id}, '${snippet.language}')">
+                                    ${snippet.description} | ${snippet.language}
+                                </a>
+                                <button id="delete-snippet-${snippet.id}" class="bg-red-500 text-white px-2 py-1 rounded delete-snippet-button" onclick="deleteSnippet(${snippet.id})">Delete</button>
+                            `;
+                            snippetsList.appendChild(snippetItem);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function createSnippet() {
+            fetch(`${apiUrl}/snippets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    language: document.getElementById("languageSelect").value,
+                    description: ""
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                selectedSnippetId = data.id;
+                selectedSnippetLanguage = data.language;
+                loadSnippets();
+                loadSnippet(selectedSnippetId, selectedSnippetLanguage);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function generateCode() {
+            const description = document.querySelector('.code-description').value;
+
+            if ((selectedSnippetId == null) || (selectedSnippetLanguage == null)) {
+                alert('No snippet selected.');
+                return;
+            }
+
+            fetch(`${apiUrl}/snippets/${selectedSnippetId}/generate_code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: selectedSnippetLanguage, description })
+            })
+            .then(response => response.json())
+            .then(data => {
+                delete document.getElementById('code-display').dataset.highlighted;
+                document.getElementById('code-display').innerText = data.code;
+                document.getElementById('code-display').className = `language-${data.language}`;
+                hljs.highlightElement(document.getElementById('code-display'));
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function improveCode() {
+            const feedback = document.querySelector('.feedback-text').value;
+            console.log(selectedSnippetLanguage);
+
+            if ((selectedSnippetId == null) || (selectedSnippetLanguage == null)) {
+                alert('No snippet selected.');
+                return;
+            }
+
+            fetch(`${apiUrl}/snippets/${selectedSnippetId}/improve_code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: feedback})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('code-display').innerText = data.code;
+                document.getElementById('code-display').className = `language-${data.language}`;
+                hljs.highlightElement(document.getElementById('code-display'));
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function generateTests() {
+            if ((selectedSnippetId == null)) {
+                alert('No snippet selected.');
+                return;
+            }
+            fetch(`${apiUrl}/snippets/${selectedSnippetId}/generate_tests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                document.querySelector('.test-cases-display').innerText = data.tests;
+                hljs.highlightElement(document.querySelector('.test-cases-display'));
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function improveTests() {
+            const feedback = document.querySelector('.feedback-tests-text').value;
+            console.log(selectedSnippetLanguage);
+
+            if ((selectedSnippetId == null)) {
+                alert('No snippet selected.');
+                return;
+            }
+            fetch(`${apiUrl}/snippets/${selectedSnippetId}/improve_tests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: feedback })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.test-cases-display').innerText = data.tests;
+                hljs.highlightElement(document.querySelector('.test-cases-display'));
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function runTests() {
+            if ((selectedSnippetId == null)) {
+                alert('No snippet selected.');
+                return;
+            }
+            fetch(`${apiUrl}/snippets/${selectedSnippetId}/run_tests`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                document.querySelector('.test-results-display').innerText = data.results;
+                if (data.test_result === 'NG') {
+                    document.querySelector('.regenerate-button').disabled = false;
+                }
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteSnippet(snippetId) {
+            fetch(`${apiUrl}/snippets/${snippetId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadSnippets();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function loadSnippet(snippetId, language) {
+            selectedSnippetId = snippetId;
+            selectedSnippetLanguage = language;
+            console.log(selectedSnippetId);
+            console.log(selectedSnippetLanguage);
+
+            fetch(`${apiUrl}/snippets/${snippetId}`)
+            .then(response => response.json())
+            .then(data => {
+                data = data[0];
+                console.log(data);
+                document.querySelector('.code-description').value = data.description;
+                document.getElementById("languageSelect").value = data.language;
+                document.getElementById('code-display').innerText = data.code;
+                document.getElementById('code-display').className = `language-${data.language}`;
+                hljs.highlightElement(document.getElementById('code-display'));
+                document.querySelector('.test-cases-display').innerText = data.tests;
+                document.querySelector('.test-results-display').innerText = data.results;
+
+                // Highlight the selected snippet
+                document.querySelectorAll('.snippet-link').forEach(link => link.classList.remove('selected-snippet'));
+                document.getElementById(`snippet-${snippetId}`).classList.add('selected-snippet');
+                document.getElementById(`snippet-${snippetId}`).classList.remove('bg-gray-300');
+
+                // Hide the delete button for the selected snippet
+                document.querySelectorAll('.delete-snippet-button').forEach(button => button.style.display = 'block');
+                document.getElementById(`delete-snippet-${snippetId}`).style.display = 'none';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function getSelectedSnippetId() {
+            return selectedSnippetId;
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // delete hljs.dataset.highlighted;
+        hljs.highlightAll();
+    </script>
 </body>
 
 </html>
